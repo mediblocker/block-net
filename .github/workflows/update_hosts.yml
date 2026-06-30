@@ -12,27 +12,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download UT1 blocklists from tarball
+      - name: Download and inspect UT1 tarball
         run: |
-          mkdir -p ut1_extract
-          curl -fsSL "https://dsi.ut-capitole.fr/blacklists/download/blacklists.tar.gz" \
-            | tar -xz -C ut1_extract 2>/dev/null || true
-          find ut1_extract -name "domains" \
-            | grep -E "/(lingerie|adult|erotism)/" \
-            | xargs cat 2>/dev/null \
-            | awk '{print "0.0.0.0 " $1}' > ut1.txt
-          echo "UT1 entries: $(wc -l < ut1.txt)"
-          rm -rf ut1_extract
+          curl -fsSL "https://dsi.ut-capitole.fr/blacklists/download/blacklists.tar.gz" -o ut1.tar.gz
+          echo "Size: $(wc -c < ut1.tar.gz) bytes"
+          echo "--- Paths matching our categories ---"
+          tar -tzf ut1.tar.gz | grep -E "(lingerie|adult|erotism)" | head -20
 
-      - name: Build hosts file
+      - name: Extract categories and build hosts file
         run: |
+          tar -xzf ut1.tar.gz $(tar -tzf ut1.tar.gz | grep -E "/(lingerie|adult|erotism)/domains$" | tr '\n' ' ')
+          find . -name "domains" | grep -E "/(lingerie|adult|erotism)/" | xargs cat | awk '{print "0.0.0.0 " $1}' > ut1.txt
+          echo "UT1 entries: $(wc -l < ut1.txt)"
           cat ut1.txt custom_additions.txt \
-            | grep -v "^#" \
-            | grep -v "^$" \
-            | sort -u \
-            > hosts_block.txt
+            | grep -v "^#" | grep -v "^$" | sort -u > hosts_block.txt
           echo "# Generated $(date -u). Entries: $(wc -l < hosts_block.txt)" \
             | cat - hosts_block.txt > tmp && mv tmp hosts_block.txt
+          rm -f ut1.tar.gz
 
       - name: Commit if changed
         run: |
