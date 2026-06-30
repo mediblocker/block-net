@@ -12,14 +12,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download blocklists and build hosts file
+      - name: Download UT1 blocklists from tarball
         run: |
-          curl -fsSL "https://dsi.ut-capitole.fr/blacklists/download/blacklists/lingerie/domains" \
+          mkdir -p ut1_extract
+          curl -fsSL "https://dsi.ut-capitole.fr/blacklists/download/blacklists.tar.gz" \
+            | tar -xz -C ut1_extract 2>/dev/null || true
+          find ut1_extract -name "domains" \
+            | grep -E "/(lingerie|adult|erotism)/" \
+            | xargs cat 2>/dev/null \
             | awk '{print "0.0.0.0 " $1}' > ut1.txt
-          curl -fsSL "https://dsi.ut-capitole.fr/blacklists/download/blacklists/adult/domains" \
-            | awk '{print "0.0.0.0 " $1}' >> ut1.txt
-          curl -fsSL "https://dsi.ut-capitole.fr/blacklists/download/blacklists/erotism/domains" \
-            | awk '{print "0.0.0.0 " $1}' >> ut1.txt
+          echo "UT1 entries: $(wc -l < ut1.txt)"
+          rm -rf ut1_extract
+
+      - name: Build hosts file
+        run: |
           cat ut1.txt custom_additions.txt \
             | grep -v "^#" \
             | grep -v "^$" \
