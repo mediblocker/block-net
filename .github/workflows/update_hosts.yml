@@ -12,19 +12,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download UT1 tarball and extract categories
+      - name: Download blocklists and build hosts file
         run: |
-          curl -fsSL "https://dsi.ut-capitole.fr/blacklists/download/blacklists.tar.gz" -o ut1.tar.gz
-          tar -xzf ut1.tar.gz blacklists/lingerie/domains blacklists/mixed_adult/domains
-          cat blacklists/lingerie/domains blacklists/mixed_adult/domains \
-            | awk '{print "0.0.0.0 " $1}' > ut1.txt
-          echo "UT1 entries: $(wc -l < ut1.txt)"
-          rm -f ut1.tar.gz
+          # UT1 Blacklist categories
+          for category in lingerie adult erotism imagehosting manga mixed_adult warez; do
+            curl -fsSL "https://dsi.ut-capitole.fr/blacklists/download/blacklists/${category}/domains" \
+              | awk '{print "0.0.0.0 " $1}' >> ut1.txt
+          done
 
-      - name: Build hosts file
-        run: |
+          # Merge with custom additions; deduplicate
           cat ut1.txt custom_additions.txt \
-            | grep -v "^#" | grep -v "^$" | sort -u > hosts_block.txt
+            | grep -v "^#" \
+            | grep -v "^$" \
+            | sort -u \
+            > hosts_block.txt
+
           echo "# Generated $(date -u). Entries: $(wc -l < hosts_block.txt)" \
             | cat - hosts_block.txt > tmp && mv tmp hosts_block.txt
           echo "Final entries: $(grep -c '^0\.0\.0\.0' hosts_block.txt)"
