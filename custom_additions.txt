@@ -183,3 +183,36 @@
 # Cloud file sharing
 0.0.0.0 1024terabox.com
 
+
+# Photo / wallpaper sites (additions)
+0.0.0.0 peakpx.com
+0.0.0.0 wallhere.com
+0.0.0.0 hdwallpapers.net
+0.0.0.0 wallpaperspoint.com
+0.0.0.0 wallpaperboat.com
+0.0.0.0 wallpapers.net
+0.0.0.0 wallpapermania.eu
+0.0.0.0 wallpaperset.com
+0.0.0.0 poolga.com
+0.0.0.0 desktopbackground.org
+
+# Free stock photo sites
+0.0.0.0 unsplash.com
+0.0.0.0 images.unsplash.com
+0.0.0.0 pixabay.com
+0.0.0.0 pxhere.com
+0.0.0.0 pxfuel.com
+0.0.0.0 stocksnap.io
+0.0.0.0 freepik.com
+0.0.0.0 freepikcompany.com
+0.0.0.0 shutterstock.com
+0.0.0.0 istockphoto.com
+0.0.0.0 500px.com
+0.0.0.0 photobucket.com
+
+# Movie / TV image databases
+0.0.0.0 themoviedb.org
+0.0.0.0 image.tmdb.org
+0.0.0.0 thetvdb.com
+0.0.0.0 fanart.tv
+0.0.0.0 movieposterdb.com
