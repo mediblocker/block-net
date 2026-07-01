@@ -4,23 +4,27 @@ on:
     - cron: '0 3 1 * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Download blocklists and build hosts file
         run: |
-          # UT1 Blacklist categories
+          # Download full UT1 blacklist archive
+          curl -fsSL "http://dsi.ut-capitole.fr/blacklists/download/all.tar.gz" -o ut1_all.tar.gz
+
+          # Extract domain lists for each category
           for category in lingerie adult erotism imagehosting manga mixed_adult warez; do
-            curl -fsSL "https://dsi.ut-capitole.fr/blacklists/download/blacklists/${category}/domains" \
-              | awk '{print "0.0.0.0 " $1}' >> ut1.txt
+            tar -xzOf ut1_all.tar.gz "blacklists/${category}/domains" 2>/dev/null \
+              | awk 'NF && !/^#/{print "0.0.0.0 " $1}' >> ut1.txt || true
           done
 
-          # Merge with custom additions; deduplicate
+          # Merge UT1 with custom additions; deduplicate
           cat ut1.txt custom_additions.txt \
             | grep -v "^#" \
             | grep -v "^$" \
@@ -29,7 +33,6 @@ jobs:
 
           echo "# Generated $(date -u). Entries: $(wc -l < hosts_block.txt)" \
             | cat - hosts_block.txt > tmp && mv tmp hosts_block.txt
-          echo "Final entries: $(grep -c '^0\.0\.0\.0' hosts_block.txt)"
 
       - name: Commit if changed
         run: |
