@@ -15,24 +15,26 @@ jobs:
 
       - name: Download blocklists and build hosts file
         run: |
-          # Download full UT1 blacklist archive
           curl -fsSL "http://dsi.ut-capitole.fr/blacklists/download/all.tar.gz" -o ut1_all.tar.gz
 
-          # Extract domain lists for each category
-          for category in lingerie adult erotism imagehosting manga mixed_adult warez; do
+          # Extract only categories that exist in the archive.
+          # adult (4.6M entries) is skipped — covered by NextDNS native lists.
+          # erotism and imagehosting do not exist in this archive.
+          for category in lingerie manga mixed_adult warez filehosting; do
             tar -xzOf ut1_all.tar.gz "blacklists/${category}/domains" 2>/dev/null \
-              | awk 'NF && !/^#/{print "0.0.0.0 " $1}' >> ut1.txt || true
+              | awk 'NF && !/^#/ { print "0.0.0.0 " $1 }' >> ut1.txt || true
           done
 
-          # Merge UT1 with custom additions; deduplicate
           cat ut1.txt custom_additions.txt \
             | grep -v "^#" \
-            | grep -v "^$" \
+            | grep -v "^[[:space:]]*$" \
             | sort -u \
             > hosts_block.txt
 
           echo "# Generated $(date -u). Entries: $(wc -l < hosts_block.txt)" \
             | cat - hosts_block.txt > tmp && mv tmp hosts_block.txt
+
+          rm -f ut1_all.tar.gz ut1.txt
 
       - name: Commit if changed
         run: |
